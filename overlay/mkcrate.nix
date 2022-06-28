@@ -237,7 +237,7 @@ let
       while grep '\[[^"]*"[^\\"]*\\"[^\\"]*\\"[^"]*[^]]*\]' Cargo.original.toml; do
         sed -i -r 's/\[([^"]*)"([^\\"]*)\\"([^\\"]*)\\"([^"]*)"([^]]*)\]/[\1"\2'"'"'\3'"'"'\4"\5]/g' Cargo.original.toml
       done;
-      remarshal -if toml -of json Cargo.original.toml \
+      remarshal -if toml -of json Cargo.original.toml | tee /dev/stderr \
         | jq "{ package: .package
               , lib: .lib
               , bin: .bin
@@ -245,8 +245,8 @@ let
               , example: .example
               , bench: (if \"$registry\" == \"unknown\" then .bench else null end)
               } | with_entries(select( .value != null ))
-              + $manifestPatch" \
-        | jq "del(.[][] | nulls)" \
+              + $manifestPatch" | tee /dev/stderr \
+        | jq "del(.[][] | nulls)" | tee /dev/stderr \
         | remarshal -if json -of toml > Cargo.toml
     '';
 
